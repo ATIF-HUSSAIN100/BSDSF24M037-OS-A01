@@ -52,3 +52,56 @@ A *GitHub Release* is a way to package and distribute a specific version of soft
 - Ensures users get exactly the version you tested and verified
 - Essential for distributing software to non-developers
 - For our project, bin/client is the actual working program; without it, the release would only contain source code that users would have to compile themselves
+
+
+
+
+
+
+
+---
+
+## Part 3: Static Library
+
+### Q1: Compare the Makefile from Part 2 and Part 3. What are the key differences?
+
+Part 2 Makefile:
+- All .c files including main.c compiled and linked together
+- Single target: bin/client
+- No library involved
+
+Part 3 Makefile:
+- New variables: AR, ARFLAGS, LIB, LIB_SRCS, LIB_OBJS
+- LIB_SRCS filters out main.c using filter-out so library only contains utility code
+- New rule $(LIB): $(LIB_OBJS) uses ar rcs to create lib/libmyutils.a
+- Linking uses -L$(LIB_DIR) -lmyutils instead of listing object files
+- New target: bin/client_static
+
+Key differences:
+1. ar command creates the archive from .o files
+2. -L specifies the library search path
+3. -lmyutils tells the linker to link against libmyutils.a
+4. Library code is separated from the driver (main.c)
+
+### Q2: What is the purpose of the ar command? Why is ranlib often used after it?
+
+ar (archiver) bundles multiple object files into a static library archive (.a file).
+
+Usage: ar rcs libmyutils.a file1.o file2.o
+- r = insert or replace files
+- c = create archive if it does not exist
+- s = write symbol index
+
+ranlib generates the symbol index (symbol table) inside the archive. This lets the linker quickly find which object file defines a symbol.
+
+Historically, ar created the archive and ranlib had to be run separately. Modern ar with the s flag does both automatically, so ranlib is rarely needed now.
+
+### Q3: When you run nm on client_static, are symbols like mystrlen present?
+
+Yes, the symbols are present. Running nm bin/client_static | grep mystrlen shows:
+
+0000000000001268 T mystrlen
+
+The T means the symbol is in the text (code) section and is defined inside the executable.
+
+What this tells us: Static linking copies the actual machine code of library functions into the final executable. The executable is self-contained and does not need libmyutils.a at runtime. This is why static binaries are larger than dynamic ones, and why each program gets its own copy of the code.
