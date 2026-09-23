@@ -79,4 +79,22 @@ clean:
 	rm -f $(OBJ_DIR)/*.o $(STATIC_LIB) $(DYNAMIC_LIB) $(STATIC_TARGET) $(DYNAMIC_TARGET)
 	@echo "✓ Cleaned"
 
-.PHONY: all run-static run-dynamic analyze clean
+.PHONY: all run-static run-dynamic analyze clean install uninstall
+# --- Install ---
+PREFIX = /usr/local
+BINDIR = $(PREFIX)/bin
+MANDIR = $(PREFIX)/share/man/man3
+
+install: $(DYNAMIC_TARGET)
+	@echo "Installing client to $(BINDIR)..."
+	install -d $(DESTDIR)$(BINDIR)
+	install -m 755 $(DYNAMIC_TARGET) $(DESTDIR)$(BINDIR)/client
+	@echo "Installing man pages to $(MANDIR)..."
+	install -d $(DESTDIR)$(MANDIR)
+	install -m 644 man/man3/*.3 $(DESTDIR)$(MANDIR)/
+	@echo "✓ Installation complete"
+
+uninstall:
+	rm -f $(DESTDIR)$(BINDIR)/client
+	rm -f $(DESTDIR)$(MANDIR)/*.3
+	@echo "✓ Uninstalled"
