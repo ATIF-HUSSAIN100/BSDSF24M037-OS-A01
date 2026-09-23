@@ -105,3 +105,58 @@ Yes, the symbols are present. Running nm bin/client_static | grep mystrlen shows
 The T means the symbol is in the text (code) section and is defined inside the executable.
 
 What this tells us: Static linking copies the actual machine code of library functions into the final executable. The executable is self-contained and does not need libmyutils.a at runtime. This is why static binaries are larger than dynamic ones, and why each program gets its own copy of the code.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+
+## Part 4: Dynamic Library
+
+### Q1: What is Position-Independent Code (-fPIC) and why is it a fundamental requirement for creating shared libraries?
+
+Position-Independent Code (PIC) is machine code that executes correctly regardless of where it is loaded into memory. It uses relative addressing instead of absolute addressing.
+
+Why it's required for shared libraries:
+- Shared libraries are loaded at runtime into whatever memory address is available
+- The exact load address is not known at compile time
+- Without PIC, the library would only work at a specific address
+- Multiple programs can share the same library in memory at different virtual addresses
+- PIC ensures the code works from any address, enabling memory sharing between processes
+
+### Q2: Explain the difference in file size between your static and dynamic clients. Why does this difference exist?
+
+The static client (client_static) is significantly larger than the dynamic client (client_dynamic).
+
+Why the difference exists:
+- Static linking COPIES all library function code directly into the executable
+- Dynamic linking only stores REFERENCES (symbol names) to the library functions
+- The actual library code remains in the separate .so file
+- Multiple programs can share one copy of the dynamic library in memory
+
+### Q3: What is the LD_LIBRARY_PATH environment variable? Why was it necessary to set it for your program to run?
+
+LD_LIBRARY_PATH is an environment variable that specifies additional directories where the dynamic linker should search for shared libraries before searching the standard system directories.
+
+Why it was necessary:
+- Our custom library libmyutils.so is in ./lib/, which is not a standard system library path
+- The dynamic loader doesn't know where to find custom libraries by default
+- Without it, the loader searches only standard paths (/lib, /usr/lib, etc.) and fails with "cannot open shared object file"
+
+What this tells us about the dynamic loader:
+- The OS dynamic loader is responsible for finding and loading shared libraries at runtime
+- It searches a predefined set of paths plus paths in LD_LIBRARY_PATH
+- The loader resolves symbol references by matching them to libraries
+- This is why dynamic executables are not self-contained — they depend on the runtime environment
